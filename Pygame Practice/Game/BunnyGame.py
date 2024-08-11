@@ -1,68 +1,81 @@
+from typing import List
 import pygame
 pygame.init()
 pygame.font.init()
+pygame.display.set_caption('Runner')# window name
 
 from ImageGameObject import ImageGameObject
+from TextUI import TextUI
 from sys import exit
 
 #paths
-path_to_characters_sprites_folder = "../Graphics/Sunny Land Collection Files/Sunny Land Collection Files/Assets/Characters"
+characters_sprites_folder_path = "../Graphics/Sunny Land Collection Files/Sunny Land Collection Files/Assets/Characters"
 #
-# Frequently changed variables
+
+# Function returns the bunny game object
+def create_bunny(bunny_position_x:float):
+    bunny_size = [screen_display_size[0]/30,screen_display_size[1]/8]
+
+                            # this will make the feet of the bunny touch the ground
+    bunny_image_path = characters_sprites_folder_path+'/sunny-bunny/Sprites/idle/_0000_Layer-1.png'
+    bunny_position = [bunny_position_x,ground_game_object.get_position()[1]-bunny_size[1]]
+    return  ImageGameObject(bunny_size,bunny_position,bunny_image_path)
+    
+# Function returns the sky game object
+def create_sky():
+    sky_size = [screen_display_size[0], screen_display_size[1]*3/4] #so it occupies 3/4 of the y axis of the screen
+    sky_position = [0,0]  
+    sky_image_path = '../Graphics/Backgrounds/skyBackground.jpg'
+    return ImageGameObject(sky_size,sky_position,sky_image_path)
+
+#Function returns the ground game object
+def create_ground():
+    ground_size = [screen_display_size[0], screen_display_size[1]*1/4] #so it occupies 1/4 of the y axis of the screen (the rest will be occupied by the sky)
+    ground_position = [0,screen_display_size[1]*3/4] #so it starts at the end of the sky
+    ground_image_path = '../Graphics/Backgrounds/groundImage.png'
+    return ImageGameObject(ground_size, ground_position, ground_image_path)
+
+#Function returns the text
+def create_H1_Text():
+    position = [screen_display_size[0]/3,screen_display_size[1]/10]
+    font = pygame.font.Font(None, 50)
+    color = 'Green'
+    antiAlising = False
+    content = 'game text'
+    return TextUI(None, 50, position, color, content, antiAlising)
+
+
 maxFPSRate = 60
 screen_display_size = [800,400]
 
 ##setting the displays
-    #setting the sky_display
-sky_display_starting_size = [screen_display_size[0], screen_display_size[1]*3/4] #so it occupies 3/4 of the y axis of the screen
-sky_display_starting_position = [0,0]  
-sky_display_starting_image = pygame.image.load('../Graphics/Backgrounds/skyBackground.jpg')
-sky_display = pygame.transform.scale(sky_display_starting_image,sky_display_starting_size)
-sky_display_position = sky_display_starting_position
+    #creating the sky go
+sky_game_object = create_sky()
     #
-    #now the ground_display
-ground_display_starting_size = [screen_display_size[0], screen_display_size[1]*1/4] #so it occupies 1/4 of the y axis of the screen (the rest will be occupied by the sky)
-ground_display_starting_position = [0,screen_display_size[1]*3/4] #so it starts at the end of the sky
-ground_display_starting_image = pygame.image.load('../Graphics/Backgrounds/groundImage.png')
-ground_display = pygame.transform.scale(ground_display_starting_image,ground_display_starting_size)
-ground_display_position = ground_display_starting_position
+    #creating the ground go
+ground_game_object = create_ground()
     #
-    #player display
-bunny_png_height_px = 50
-bunny_display_starting_size = [screen_display_size[0]/30,screen_display_size[1]/8]
-bunny_display_position = [screen_display_size[0]/20,
-                                screen_display_size[1]-(screen_display_size[1]-
-                                ground_display_position[1])-bunny_png_height_px]
-                                #this will make the feet of the bunny touch the ground
-bunny_display_starting_image = pygame.image.load(path_to_characters_sprites_folder+'/sunny-bunny/Sprites/idle/_0000_Layer-1.png')
-bunny_display_position = bunny_display_position
-bunny_display = pygame.transform.scale(bunny_display_starting_image,bunny_display_starting_size)
-
+    #creating the bunny go
+bunny_game_object = create_bunny(10)
+bunny_speed = 0.1
     #
 #
 #text
-text_display_position = [screen_display_size[0]/3,screen_display_size[1]/10]
-text_display_font = pygame.font.Font(None, 50)
-text_display_color = 'Green'
-text_display_AA = False
-text_display_Content = 'game text'
-text_display = text_display_font.render(text_display_Content, text_display_AA, text_display_color)
+h1Text_textUI = create_H1_Text()
 #
 
-pygame.display.set_caption('Runner')# window name
 
 clock = pygame.time.Clock() ##initializing a clock instance from pygame.time
-deltaTime = 0 # initializing the delta variable, it is the float value of the time since the last frame
+delta_time = 0 # initializing the delta variable, it is the float value of the time since the last frame
 
 screen_display = pygame.display.set_mode(screen_display_size)# screen size
 
 
-
+#game loop variables
 holdingW = False
 holdingS = False
 deltaPos = 0.0
-
-gameObject = ImageGameObject([50,100], [0,0], "../Graphics/Sunny Land Collection Files/Sunny Land Collection Files/Assets/Characters/sunny-bunny/Sprites/idle/_0000_Layer-1.png")
+#
 
 ##Game Loop
 while True:
@@ -74,35 +87,38 @@ while True:
             exit()
             #quit the app and exit the code using the sys package
             break
+
         if(event.type == pygame.KEYDOWN):
             if(event.key == pygame.K_w):
                 holdingW=True
             if(event.key == pygame.K_s):
                 holdingS=True
+
         if(event.type == pygame.KEYUP):
             if(event.key == pygame.K_w):
                 holdingW=False
             if(event.key == pygame.K_s):
                 holdingS=False
-    
+    #end of event listening
     
     #make time envolved changes in here
     
     if(holdingW):
-        gameObject.set_image_path("../Graphics/Sunny Land Collection Files/Sunny Land Collection Files/Assets/Characters/sunny-bunny/Sprites/jump/_0000_Layer-1.png")
+        bunny_game_object.set_position([bunny_game_object.get_position()[0]+delta_time*bunny_speed
+                                        ,bunny_game_object.get_position()[1]])
     if(holdingS):
-        gameObject.set_image_path("../Graphics/Sunny Land Collection Files/Sunny Land Collection Files/Assets/Characters/sunny-bunny/Sprites/idle/_0000_Layer-1.png")
-        
+        bunny_game_object.set_position([bunny_game_object.get_position()[0]-delta_time*bunny_speed
+                                        ,bunny_game_object.get_position()[1]])
+       
     #
 
     #drawing:
 
-    screen_display.blit(sky_display, sky_display_position)##drawing the sky
-    screen_display.blit(ground_display, ground_display_position)##ground
-    screen_display.blit(text_display, text_display_position)##text
-    screen_display.blit(bunny_display,bunny_display_position)##bunny
-    screen_display.blit(gameObject.getSurface(),gameObject.get_position())
+    screen_display.blit(sky_game_object.get_surface(), sky_game_object.get_position())##drawing the sky
+    screen_display.blit(ground_game_object.get_surface(), ground_game_object.get_position())##ground
+    screen_display.blit(h1Text_textUI.get_text_surface(), h1Text_textUI.get_position())##text
+    screen_display.blit(bunny_game_object.get_surface(),bunny_game_object.get_position())##bunny
     #
     pygame.display.update()
     # Get delta time in seconds without limiting the frame rate
-    deltaTime = clock.tick()
+    delta_time = clock.tick()
