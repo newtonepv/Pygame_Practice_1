@@ -12,14 +12,20 @@ from sys import exit
 characters_sprites_folder_path = "../Graphics/Sunny Land Collection Files/Sunny Land Collection Files/Assets/Characters"
 #
 
+maxFPSRate = 60
+screen_display_size = [800,400]
+
+screen_display = pygame.display.set_mode(screen_display_size)# screen size
+
+
 # Function returns the bunny game object
-def create_bunny(bunny_position_x:float):
+def create_bunny(bunny_position_x:float, ):
     bunny_size = [screen_display_size[0]/30,screen_display_size[1]/8]
 
                             # this will make the feet of the bunny touch the ground
     bunny_image_path = characters_sprites_folder_path+'/sunny-bunny/Sprites/idle/_0000_Layer-1.png'
     bunny_position = [bunny_position_x,ground_game_object.get_position()[1]-bunny_size[1]]
-    return  ImageGameObject(bunny_size,bunny_position,bunny_image_path)
+    return  ImageGameObject(bunny_size,bunny_position,bunny_image_path, alwaysInCamera=True, isClone=False)
     
 # Function returns the sky game object
 def create_sky():
@@ -45,9 +51,6 @@ def create_H1_Text():
     return TextUI(None, 50, position, color, content, antiAlising)
 
 
-maxFPSRate = 60
-screen_display_size = [800,400]
-
 ##setting the displays
     #creating the sky go
 sky_game_object = create_sky()
@@ -68,7 +71,6 @@ h1Text_textUI = create_H1_Text()
 clock = pygame.time.Clock() ##initializing a clock instance from pygame.time
 delta_time = 0 # initializing the delta variable, it is the float value of the time since the last frame
 
-screen_display = pygame.display.set_mode(screen_display_size)# screen size
 
 
 #game loop variables
@@ -76,8 +78,6 @@ holdingW = False
 holdingS = False
 deltaPos = 0.0
 #
-bunny_list: list[ImageGameObject] = []
-bunny_list.append(bunny_game_object)
 ##Game Loop
 while True:
     # listen to the player input in every frame
@@ -88,7 +88,6 @@ while True:
             exit()
             #quit the app and exit the code using the sys package
             break
-
         if(event.type == pygame.KEYDOWN):
             if(event.key == pygame.K_w):
                 holdingW=True
@@ -100,39 +99,22 @@ while True:
                 holdingW=False
             if(event.key == pygame.K_s):
                 holdingS=False
+
     #end of event listening
     #make time envolved changes in here
     
-    if(holdingW):
-        for b in bunny_list:
-            b.set_position([b.get_position()[0]+delta_time*bunny_speed
-                                            ,b.get_position()[1]])
-    if(holdingS):
-        for b in bunny_list:
-            b.set_position([b.get_position()[0]-delta_time*bunny_speed
-                                            ,b.get_position()[1]])
     
     #
-    for b in bunny_list[:]:
-        if(b.get_position()[0]<-b.get_size()[0] or b.get_position()[0]>screen_display_size[0]):
-            bunny_list.remove(b)
-
-    if(len(bunny_list)==1):#puts the second bunny in the other side of the screen
-        pos = bunny_list[0].get_position()[0]
-        if(pos<0):
-            bunny_list.append(create_bunny(screen_display_size[0]+pos))
-
-        elif(pos+bunny_list[0].get_size()[0]>screen_display_size[0]):
-            bunny_list.append(create_bunny(-(screen_display_size[0]-pos)))
 
     #if(bunny_list[0].get_position()<screen_display_size[0])
     #drawing:
 
-    screen_display.blit(sky_game_object.get_surface(), sky_game_object.get_position())##drawing the sky
-    screen_display.blit(ground_game_object.get_surface(), ground_game_object.get_position())##ground
+    screen_display.blit(sky_game_object.get_surface(), sky_game_object.get_rectangle())##drawing the sky
+    screen_display.blit(ground_game_object.get_surface(), ground_game_object.get_rectangle())##ground
     screen_display.blit(h1Text_textUI.get_text_surface(), h1Text_textUI.get_position())##text
-    for b in bunny_list:
-        screen_display.blit(b.get_surface(),b.get_position())##bunny
+    bunny_game_object.update(screen_display,screen_display_size, holdingS, holdingW,delta_time,bunny_speed)
+
+    ##bunny
     #
     pygame.display.update()
     # Get delta time in seconds without limiting the frame rate
