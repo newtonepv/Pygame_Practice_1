@@ -76,7 +76,8 @@ holdingW = False
 holdingS = False
 deltaPos = 0.0
 #
-
+bunny_list: list[ImageGameObject] = []
+bunny_list.append(bunny_game_object)
 ##Game Loop
 while True:
     # listen to the player input in every frame
@@ -100,24 +101,38 @@ while True:
             if(event.key == pygame.K_s):
                 holdingS=False
     #end of event listening
-    
     #make time envolved changes in here
     
     if(holdingW):
-        bunny_game_object.set_position([bunny_game_object.get_position()[0]+delta_time*bunny_speed
-                                        ,bunny_game_object.get_position()[1]])
+        for b in bunny_list:
+            b.set_position([b.get_position()[0]+delta_time*bunny_speed
+                                            ,b.get_position()[1]])
     if(holdingS):
-        bunny_game_object.set_position([bunny_game_object.get_position()[0]-delta_time*bunny_speed
-                                        ,bunny_game_object.get_position()[1]])
-       
+        for b in bunny_list:
+            b.set_position([b.get_position()[0]-delta_time*bunny_speed
+                                            ,b.get_position()[1]])
+    
     #
+    for b in bunny_list[:]:
+        if(b.get_position()[0]<-b.get_size()[0] or b.get_position()[0]>screen_display_size[0]):
+            bunny_list.remove(b)
 
+    if(len(bunny_list)==1):#puts the second bunny in the other side of the screen
+        pos = bunny_list[0].get_position()[0]
+        if(pos<0):
+            bunny_list.append(create_bunny(screen_display_size[0]+pos))
+
+        elif(pos+bunny_list[0].get_size()[0]>screen_display_size[0]):
+            bunny_list.append(create_bunny(-(screen_display_size[0]-pos)))
+
+    #if(bunny_list[0].get_position()<screen_display_size[0])
     #drawing:
 
     screen_display.blit(sky_game_object.get_surface(), sky_game_object.get_position())##drawing the sky
     screen_display.blit(ground_game_object.get_surface(), ground_game_object.get_position())##ground
     screen_display.blit(h1Text_textUI.get_text_surface(), h1Text_textUI.get_position())##text
-    screen_display.blit(bunny_game_object.get_surface(),bunny_game_object.get_position())##bunny
+    for b in bunny_list:
+        screen_display.blit(b.get_surface(),b.get_position())##bunny
     #
     pygame.display.update()
     # Get delta time in seconds without limiting the frame rate
